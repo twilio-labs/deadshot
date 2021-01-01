@@ -1,0 +1,46 @@
+version: '3'
+services:
+  deadshot:
+    build: .
+    user: twilio
+    volumes:
+     - ./deadshot:/home/twilio/app/deadshot/deadshot
+     - ./bin:/home/twilio/app/deadshot/bin
+     - ./local_dev_secrets:/home/twilio/app/deadshot/secrets
+    environment:
+      - DEADSHOT_RUN_MODE=api
+    env_file:
+      - ./configuration/environment/localdev.env
+    command: flask run -h 0.0.0.0 -p 9001
+    ports:
+        - "9001:9001"
+
+  deadshot-worker:
+      build: .
+      user: twilio
+      volumes:
+        - ./deadshot:/home/twilio/app/deadshot/deadshot
+        - ./bin:/home/twilio/app/deadshot/bin
+        - ./local_dev_secrets:/home/twilio/app/deadshot/secrets
+      environment:
+        - DEADSHOT_RUN_MODE=worker
+      env_file:
+        - ./configuration/environment/localdev.env
+      command: celery -A deadshot.worker.celery_initialization.celery worker --loglevel=INFO
+      depends_on:
+        - deadshot-redis
+
+  deadshot-redis:
+    image: "redis:latest"
+
+  test:
+    build:
+      context: ./
+      dockerfile: Dockerfile.test
+    user: twilio
+    volumes:
+      - ./deadshot:/home/twilio/app/deadshot/deadshot
+      - ./tests:/home/twilio/app/deadshot/tests
+    env_file:
+      - configuration/environment/test.env
+    command: pytest -v -s
