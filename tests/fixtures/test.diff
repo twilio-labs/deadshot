@@ -1,0 +1,33 @@
+diff --git a/classes/3rdparty/storage/S3.php b/classes/3rdparty/storage/S3.php
+index 862b60bf948..52fb0dde114 100644
+--- a/classes/3rdparty/storage/S3.php
++++ b/classes/3rdparty/storage/S3.php
+@@ -34,17 +34,24 @@ class S3 {
+
+    public function __construct($region = NULL, $signatureVersion = NULL) {
+        $cacheAdapter = new AbstractCacheAdapter(AbstractCache::fetchCache('apc'));
++
++       // NOTE: For SignatureV4 to work, this must not be removed. SignatureV4 requires
++       // this parameter.
+        if (empty($region)) {
+            $region = self::$S3_REGION_us_east_1;
+        }
+
+        $factoryOptions = array(
+                    'region' => $region,
+-                   'credentials.cache' => $cacheAdapter
++                   'credentials.cache' => $cacheAdapter,
+                );
+-
+-       if ($signatureVersion) {
+-           $factoryOptions["signature"] = $signatureVersion;
++
++       // So far the only use of this arg is to use v4. Due to other signing methods
++       // and SignatureInterfaces (such as v3http), we'll default to forcing v4 if
++       // no value is given to prevent S3Client defaulting to v2 which will fail to
++       // work on 6/24/2019.
++       if (empty($signatureVersion)) {
++           $factoryOptions["signature"] = self::$S3_SIGNATURE_v4;
+        }
+
+        $this->client = S3Client::factory($factoryOptions);

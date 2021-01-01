@@ -1,0 +1,32 @@
+{
+  "AWS Secrets": {
+    "regex" : ["(\\\"|\\')?(AWS|aws|Aws)?_?(SECRET|secret|Secret)?_?(ACCESS|access|Access)?_?(KEY|key|Key)(\\\"|\\')?\\s*(:|=>|=)\\s*(\\\"|\\')?(([A-Za-z0-9/\\\\+=]{40}(?![A-Z0-9]))|(?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9]))(\\\"|\\')?", "(\\\"|\\')?(AWS|aws|Aws)?_?(ACCOUNT|account|Account)_?(ID|id|Id)?(\\\"|\\')?\\s*(:|=>|=)\\s*(\\\"|\\')?[0-9]{4}\\-?[0-9]{4}\\-?[0-9]{4}(\\\"|\\')?", "(\\\"|\\')?(AWS|aws|Aws)_?(ACCESS|access|Access)?_?(KEY|key|Key)?_?(ID|id|Id|iD)?(\\\"|\\')?\\s*(:|=>|=)\\s*(\\\"|\\')?((?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9]))(\\\"|\\')?"],
+    "recommendation" : "Do not hardcode AWS secrets, and please rotate them since they are now present in the git commit history",
+    "slack_alert": "True",
+    "entropy_check": "True"
+  },
+  "Slack Token": {
+    "regex" : ["xox.-[0-9]{10,12}-[0-9]{12,13}-[0-9a-zA-Z]{24,32}"],
+    "recommendation" : "Please rotate them since they are now present in the git commit history and use environment variables to store and access Slack tokens",
+    "slack_alert": "True",
+    "entropy_check": "False"
+  },
+  "Slack Webhook": {
+    "regex" : ["https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}"],
+    "recommendation" : "Please rotate them since they are now present in the git commit history and use environment variables to store and access slack webhooks",
+    "slack_alert": "True",
+    "entropy_check": "False"
+  },
+  "Sendgrid Token": {
+    "regex" : ["^(SG)[a-zA-Z0-9._-]{67}$"],
+    "recommendation" : "Please rotate them since they are now present in the git commit history and use environment variables to store and access Sendgrid authentication tokens",
+    "slack_alert": "True",
+    "entropy_check": "False"
+  },
+  "SQL Statements": {
+    "regex" : ["(select|SELECT)+\\s+([A-Za-z0-9]|[*]|[,]|\\s)+\\s+(from|FROM)", "(insert|INSERT)+\\s+(into|INTO)+\\s+([A-Za-z0-9])+\\s+(\\()(([a-zA-Z0-9]|[,]|\\s)*)(\\))\\s+(values|VALUES)", "(update|UPDATE){1}\\s+[A-Za-z0-9]+\\s+(set|SET){1}\\s+([a-zA-Z0-9]+\\=\\'?[a-zA-Z0-9]*\\'?)\\s+", "(delete|DELETE)\\s+(from|FROM)\\s+[a-zA-Z0-9]+\\s+(where|WHERE)?", "(drop|DROP|truncate|TRUNCATE)\\s*(database|DATABASE|table|TABLE)\\s+"],
+    "recommendation" : "Looks like you're using SQL Statements in your code. Please be sure this is intentional",
+    "slack_alert": "False",
+    "entropy_check": "False"
+  }
+}

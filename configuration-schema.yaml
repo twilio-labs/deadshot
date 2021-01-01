@@ -1,0 +1,49 @@
+schema:
+  description: Deadshot Github API Service
+  properties:
+    CELERY_BROKER_HOST:
+      description: Celery broker host to use for api->worker
+      type: string
+      default: localhost
+    CELERY_BROKER_PORT:
+      description: Celery broker port to use for api->worker
+      type: string
+      default: 6379
+    CELERY_BROKER_DATABASE:
+      description: Celery broker database to use for api->worker
+      type: string
+      default: 1
+    DEADSHOT_LOG_LEVEL:
+      description: Sets the log level for the service
+      type: string
+      default: INFO
+    DEADSHOT_RUN_MODE:
+      description: Sets o-v to run in API or Worker mode
+      enum: [api, worker]
+      default: api
+    GITHUB_API:
+      description: Github API URL
+      type: string
+      default: https://<github url>/api/v3
+    GITHUB_APP_NAME:
+      description: Github App name used to get the latest comment by the app
+      type: string
+      default: deadshot[bot]
+    GITHUB_URL:
+      description: Github URL
+      type: string
+      default: <github url with no scheme or port>
+    JIRA_SERVER:
+      description: Jira server URL for SSD ticket creation
+      type: string
+      default: <jira url>
+  required:
+    - CELERY_BROKER_HOST
+    - CELERY_BROKER_PORT
+    - CELERY_BROKER_DATABASE
+    - DEADSHOT_LOG_LEVEL
+    - DEADSHOT_RUN_MODE
+    - GITHUB_API
+    - GITHUB_APP_NAME
+    - GITHUB_URL
+    - JIRA_SERVER

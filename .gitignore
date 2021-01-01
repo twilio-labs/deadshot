@@ -1,0 +1,10 @@
+# ignore all json used for testing
+#*.json
+local_dev_secrets
+!local_secrets/.gitkeep
+.DS_Store
+# **/test_data
+*.pyc
+*.idea
+__pycache__
+build
