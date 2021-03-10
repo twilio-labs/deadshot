@@ -9,6 +9,7 @@ DOCKER_RUN:= docker run
 
 build:
 	docker build . --tag $(PROJECT)
+	docker build -f Dockerfile.redis -t $(PROJECT)-redis .
 
 build-test:
 	echo $(TEST_IMAGE_NAME)
