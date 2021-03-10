@@ -9,6 +9,19 @@ ENV APP_DIR /home/twilio/app/deadshot
 ENV APP_INSTALL_DIR /app/deadshot
 ENV DEADSHOT_RUN_MODE api
 
+###################################################
+# Please configure the following environment variables before building the image
+ENV DEADSHOT_LOG_LEVEL DEBUG
+ENV GITHUB_URL <github-url-without-scheme-or-port>
+ENV GITHUB_API https://<github-url>/api/v3
+ENV JIRA_SERVER=https://<jira-url>>.com
+ENV GITHUB_APP_NAME deadshot[bot]
+####################################################
+
+ENV CELERY_BROKER_HOST redis
+ENV CELERY_BROKER_PORT 6379
+ENV CELERY_BROKER_DATABASE 1
+
 RUN mkdir -p /home/twilio
 RUN groupadd -r twilio &&\
     useradd -r -g twilio -d /home/twilio -s /sbin/nologin -c "Twilio Docker image user" twilio
@@ -21,7 +34,7 @@ COPY deadshot $APP_INSTALL_DIR/deadshot
 COPY bin $APP_INSTALL_DIR/bin
 COPY local_dev_secrets $APP_DIR/secrets
 COPY requirements.txt $APP_INSTALL_DIR
-ENV SECRET_GITHUB_SECRETS $APP_DIR/secrets/github_secrets.json
+ENV SECRET_GITHUB_SECRET $APP_DIR/secrets/github_secrets.json
 ENV SECRET_SLACK_WEBHOOKS $APP_DIR/secrets/slack_webhook.json
 ENV SECRET_JIRA_AUTH $APP_DIR/secrets/jira_user.json
 RUN pip3 install -r $APP_INSTALL_DIR/requirements.txt
@@ -35,4 +48,4 @@ WORKDIR $APP_DIR
 
 EXPOSE 9001
 
-CMD (/bin/bash ./bin/run.sh)
+CMD (gunicorn -b 0.0.0.0:9001 --workers=5 "deadshot:create_app()")

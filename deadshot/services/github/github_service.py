@@ -124,8 +124,7 @@ class GithubAppService:
         gh_config = GithubConfig()
         integration_id, pem_key = gh_config.get_github_secrets()
         try:
-            git_app_handler = GithubIntegration(integration_id,
-                                                pem_key, base_url=base_url)
+            git_app_handler = GithubIntegration(integration_id, pem_key, base_url=base_url)
             access_token = git_app_handler.get_access_token(int(installation_id))
             token = access_token.token
             return token

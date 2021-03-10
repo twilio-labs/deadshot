@@ -53,17 +53,67 @@ Three environment variables are loaded with credentials in them. please load the
 - SECRET_JIRA_AUTH: This loads local_dev_secrets/jira_user.json and has the username and password for the user ID to access the org's JIRA board
 
 ### Running/Serving the Docker Image
+This command will use docker-compose.yaml to bring up all the containers. Please update configuration/environment/localdev.env with values relevant to your organisation before running the below command
 ```bash
 make serve
 ```
 
-### Building the Docker Image (automatically done when running Docker image)
+### Building and running the service using Dockerfiles
+There are two ways to build and run the Dockerfiles. There are four Dockerfiles present in the repository, three of which are used to generate a individual image for each container needed for this service to work, and the fourth one is a Dockerfile setup to create a image that can be used to either bring up the Flask application or the celery worker depending on the DEADSHOT_RUN_MODE environment variable value provided
+To run any of the steps below you need to be present in the root folder of the repository
+#### Building images from individual Dockerfiles
+There are three Dockerfiles relevant to this step. Dockerfile.api, Dockerfile.celery, and Dockerfile.redis
+###### To build the Flask API image
+```
+docker build -f Dockerfile.api -t deadshot-api:<version> .
+```
+
+###### To build the celery image
+```
+docker build -f Dockerfile.celery -t deadshot-worker:<version> .
+```
+
+###### To build the redis image
+```
+docker build -f Dockerfile.redis -t deadshot-redis:<version> .
+```
+
+#### Running built images
+The three images built in the previous steps all run in separate networks due to which they won't be able to talk to each other. To enable inter-container communications we need to add them to a container network
+
+##### Create a docker network
+```
+docker network create deadshot-network
+```
+Run the images using the created network in the following order:
+Start redis container
+```
+docker run --net deadshot-network --name redis deadshot-redis:<version>
+```
+
+Start celery container:
+```
+docker run --net deadshot-network deadshot-worker:<version>
+```
+
+Start Flask API container:
+```
+docker run --net deadshot-network -p 9001:9001 deadshot-api:<version>
+```
+
+### Building and running a single image for Flask API container and celery worker container
+#### This step is useful only if you have a orchestration that allows you to feed in environment variables, secrets and other configurations at deployment time. Please use the above method of running the containers if you don't have a configurable CI/CD setup.
+To build a single docker image for bringing up the api and celery worker based on DEADSHOT_RUN_MODE environment variable
 ```bash
 make build
 ```
+This command will also create the redis image that is needed for service
+
+If the built image is run with the environment variable DEADSHOT_RUN_MODE=api, it will bring up the Flask application
+If the image is run with environment variable DEADSHOT_RUN_MODE=worker then the celery worker will be initiated
 
 ### Server Healthcheck
-Navigating to `http://localhost:9001/api/v1/heartbeat` in a browser should return a JSON-formatted timestamp or you could do a curl
+Now that the API is ready to receive requests navigating to `http://localhost:9001/api/v1/heartbeat` in a browser should return a valid response or you could do a curl
 ```bash
 curl loaclhost:9001/api/v1/healthcheck
 ```
@@ -77,4 +127,4 @@ curl -X POST -H "content-type: application/json" -H "X-GitHub-Enterprise-Host: g
 ```
 
 ## Limitations
-At this time, Deadshot is only tested with Github Enterprise, but should work with Github cloud as well.
+At this time, Deadshot has only tested with Github Enterprise, but should work with Github cloud as well.
