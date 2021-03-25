@@ -1,4 +1,4 @@
-FROM python:3.9.0-buster
+FROM python:3.7.9-buster
 
 RUN apt-get update
 RUN pip install --upgrade pip
