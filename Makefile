@@ -19,7 +19,7 @@ test: build-test clean-test
 	$(DOCKER_RUN) $(TEST_ARGS)
 
 serve:
-	docker-compose up --build deadshot
+	docker-compose up --build
 
 clean:
 	rm -rf build

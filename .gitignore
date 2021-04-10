@@ -8,3 +8,4 @@ local_dev_secrets
 *.idea
 __pycache__
 build
+venv
