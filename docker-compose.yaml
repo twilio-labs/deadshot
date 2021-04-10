@@ -28,9 +28,9 @@ services:
         - ./configuration/environment/localdev.env
       command: celery -A deadshot.worker.celery_initialization.celery worker --loglevel=INFO
       depends_on:
-        - deadshot-redis
+        - redis
 
-  deadshot-redis:
+  redis:
     image: "redis:latest"
 
   test:
