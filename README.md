@@ -20,10 +20,16 @@ The Github app is configured with the Flask API URL and a shared secret used for
 One way the API URL can be setup is by deploying this code on an host and assigning a application load balancer to this host.
 
 ### Creating a Github App
-Github Admins would need to create and install a Github app on Github before running or deploying the Deadshot application.
-To know more about creating a Github app please read this [guide](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app).
+Note: When creating the app please make sure you have a DNS ready for host on which you'll be deploying Deadshot containers and a secure secret string for the webhook secret.
 
-When creating the app please make sure you have a DNS ready for host on which you'll be deploying Deadshot containers and also a secret string for the webhook secret
+Github Admins would need to create and install a Github app on Github before running or deploying the Deadshot application.
+To know more about creating a Github app please read this [guide](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app)
+
+App Name: deadshot (All lower case. This is important as the service uses this name to fetch previous comments it has made on a PR)
+
+Webhook URL: http(s)://your-hosted-deadshot-dns/api/v1/deadshot-webhook
+
+To test this locally you can create a ngrok endpoint to feed into your Github app webhook section
 
 ### Github App Permissions
 For this application to work your Github app will have to enable the following permissions and subscriptions on the permissions page of the Github app:
@@ -32,14 +38,22 @@ Repository Permissions:
 - PullRequests: Read & write
 - Webhooks: Read & write
 
-All other permissions are left unchanged to the deafult value of No access
+All other permissions are left unchanged to the default value of No access
 
 Subscribe to events:
 - Pull request
 - Pull request review
 
+Finally click “Create GitHub App”. After successful app creation follow the “generate a private key” link in the top section of the app web page
+
+
+Once the private key is generated store it in a secure location.
+This generated private key is one of the pieces of data used to generate a session token for app interaction.
+
+After generating the private key, install the app on all the orgs you want it to monitor.
+
 ## Running Deadshot
-This application is a multi-container application designed to bring up all three containers (Flask, Celery, Redis) via the /bin/run.sh, so running the Dockerfile image should bring up the entirety of the application
+This is a multi-container application designed to bring up all three containers (Flask, Celery, Redis) via the /bin/run.sh, so running the Dockerfile image should bring up the entirety of the application
 
 ### Environment variables:
 This application needs the following environment variables to be given by the user
@@ -47,22 +61,37 @@ This application needs the following environment variables to be given by the us
 - GITHUB_API: This is the API URL for Github. Eg. if you have your Github DNS as https://github.mockcompany.com then your API would be something like https://github.mockcompany.com/api/v3
 - JIRA_SERVER= Your company's JIRA server web URL
 
-Three environment variables are loaded with credentials in them. please load the appropriate json file key values before running this application.
-- SECRET_GITHUB_SECRET: This variable loads local_dev_secrets/github_secrets.json and has the Github app's shared webhook secret, integration ID, and the pem key. All these three secrets are obtained from the Github app settings page
-- SECRET_SLACK_WEBHOOKS: This loads local_dev_secrets/slack_webhook.json and has the webhook URL to which the deadshot app will send slack notifications when it finds secrets in a PR for which you set slack_alert=True in regex.json
-- SECRET_JIRA_AUTH: This loads local_dev_secrets/jira_user.json and has the username and password for the user ID to access the org's JIRA board
+Note:
+For deployment using docker-compose.yaml populate these environment variables in localdev.env file.
+
+If your deploying this by building and running each container image individually via Dockerfile.api, Dockerfile.celery then update the environment variables in the respective Dockerfiles
+
+Three environment variables are loaded with path to files with credentials in them. Please load the appropriate json file key values before running this application.
+- SECRET_GITHUB_SECRET: This variable loads github_secrets.json and has the Github app's shared webhook secret, integration ID, and the pem key. All these three secrets are obtained from the Github app settings page
+  webhook secret - This is the secret configured during the app creation process
+  integration ID - This is the app ID shown on the github app settings page
+  pem key - this is the private key generated during the app installation process
+- SECRET_SLACK_WEBHOOKS: This slack_webhook.json and has the webhook URL to which the deadshot app will send slack notifications when it finds secrets in a PR for which you set slack_alert=True in regex.json
+- SECRET_JIRA_AUTH: This loads jira_user.json and has the username and password for the user ID to access the org's JIRA board
+  Note: If you do not provide valid values in SECRET_SLACK_WEBHOOKS and SECRET_JIRA_AUTH the service will soft fail and print error messages about failure to initiate slack and jira methods in the docker container logs
 
 ### Running/Serving the Docker Image
 This command will use docker-compose.yaml to bring up all the containers. Please update configuration/environment/localdev.env with values relevant to your organisation before running the below command
 ```bash
 make serve
 ```
+Once you’ve done this and do not intend to use Dockerfile for serving the application then jump to “Server Healthcheck” section
 
 ### Building and running the service using Dockerfiles
-There are two ways to build and run the Dockerfiles. There are four Dockerfiles present in the repository, three of which are used to generate a individual image for each container needed for this service to work, and the fourth one is a Dockerfile setup to create a image that can be used to either bring up the Flask application or the celery worker depending on the DEADSHOT_RUN_MODE environment variable value provided
+There are two ways to build and run the Dockerfiles. There are four Dockerfiles present in the repository, three of which are used to generate an individual image for each container needed for this service to work, and the fourth one is a Dockerfile setup to create a image that can be used to either bring up the Flask application or the celery worker depending on the DEADSHOT_RUN_MODE environment variable value (api or worker) provided
 To run any of the steps below you need to be present in the root folder of the repository
+
+Note: Ensure you’ve updated the environment variables in Dockerfile.api and Dockerfile.celery files
+
+
 #### Building images from individual Dockerfiles
 There are three Dockerfiles relevant to this step. Dockerfile.api, Dockerfile.celery, and Dockerfile.redis
+
 ###### To build the Flask API image
 ```
 docker build -f Dockerfile.api -t deadshot-api:<version> .
@@ -86,7 +115,7 @@ The three images built in the previous steps all run in separate networks due to
 docker network create deadshot-network
 ```
 Run the images using the created network in the following order:
-Start redis container
+Start redis container:
 ```
 docker run --net deadshot-network --name redis deadshot-redis:<version>
 ```
@@ -115,7 +144,7 @@ If the image is run with environment variable DEADSHOT_RUN_MODE=worker then the 
 ### Server Healthcheck
 Now that the API is ready to receive requests navigating to `http://localhost:9001/api/v1/heartbeat` in a browser should return a valid response or you could do a curl
 ```bash
-curl loaclhost:9001/api/v1/healthcheck
+curl localhost:9001/api/v1/healthcheck
 ```
 Both should show the following message:
 `{"healthcheck": "ready"}`
@@ -125,6 +154,10 @@ If you have a webhook payload of the Github app for your Pull Request then you c
 ```bash
 curl -X POST -H "content-type: application/json" -H "X-GitHub-Enterprise-Host: github.mockcompany.com" -H "X-Hub-Signature: sha1=85df4936c6396c149be94144befab41168149840" -H "X-GitHub-Event: pull_request" -d @tests/fixtures/good_pr.json http://localhost:9001/api/v1/deadshot-webhook
 ```
+## Adding new regular expressions
+If you want the tool to monitor other types of secrets then add your regular expressions in the regex.json file
+
+Note: Entropy check flag allows you to look for high entropy findings in addition to the regular expression match
 
 ## Limitations
 At this time, Deadshot has only tested with Github Enterprise, but should work with Github cloud as well.
