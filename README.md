@@ -153,7 +153,7 @@ If you have a webhook payload of the Github app for your Pull Request then you c
 curl -X POST -H "content-type: application/json" -H "X-GitHub-Enterprise-Host: github.mockcompany.com" -H "X-Hub-Signature: sha1=85df4936c6396c149be94144befab41168149840" -H "X-GitHub-Event: pull_request" -d @tests/fixtures/good_pr.json http://localhost:9001/api/v1/deadshot-webhook
 ```
 ## Adding new regular expressions
-If you want the tool to monitor other types of secrets then add your regular expressions in the regex.json file
+If you want the tool to monitor other types of secrets then add your regular expressions in the [regex.json](https://github.com/twilio-labs/deadshot/blob/main/deadshot/services/scanner/secrets_json/regex.json) file
 
 Note: Entropy check flag allows you to look for high entropy findings in addition to the regular expression match
 
