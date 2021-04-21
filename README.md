@@ -56,24 +56,22 @@ After generating the private key, install the app on all the orgs you want it to
 This is a multi-container application designed to bring up all three containers (Flask, Celery, Redis) via the /bin/run.sh, so running the Dockerfile image should bring up the entirety of the application
 
 ### Environment variables:
-This application needs the following environment variables to be given by the user
+#### Note: For deployment using docker-compose.yaml populate the these environment variables in [localdev.env](https://github.com/twilio-labs/deadshot/blob/main/configuration/environment/localdev.env). If you're deploying this by building and running each container image individually via Dockerfile.api, Dockerfile.celery then the these environment variables are in the respective Dockerfiles
+The three variables below are single string values provided by the user
 - GITHUB_URL: This is the URL behind which your Github instance is accessed. Please provide the DNS without scheme or port. Eg. if your Github web URL is https://github.mockcompany.com then provide the value github.mockcompany.com
 - GITHUB_API: This is the API URL for Github. Eg. if you have your Github DNS as https://github.mockcompany.com then your API would be something like https://github.mockcompany.com/api/v3
 - JIRA_SERVER= Your company's JIRA server web URL
 
-Note:
-For deployment using docker-compose.yaml populate these environment variables in localdev.env file.
-
-If your deploying this by building and running each container image individually via Dockerfile.api, Dockerfile.celery then update the environment variables in the respective Dockerfiles
-
-Three environment variables are loaded with path to files with credentials in them. Please load the appropriate json file key values before running this application.
+The below environment variables load path to files with credentials in them. Load the json file key values in the files available [here](https://github.com/twilio-labs/deadshot/tree/main/local_dev_secrets) before running the application. 
 - SECRET_GITHUB_SECRET: This variable loads github_secrets.json and has the Github app's shared webhook secret, integration ID, and the pem key. All these three secrets are obtained from the Github app settings page
   webhook secret - This is the secret configured during the app creation process
   integration ID - This is the app ID shown on the github app settings page
   pem key - this is the private key generated during the app installation process
 - SECRET_SLACK_WEBHOOKS: This slack_webhook.json and has the webhook URL to which the deadshot app will send slack notifications when it finds secrets in a PR for which you set slack_alert=True in regex.json
 - SECRET_JIRA_AUTH: This loads jira_user.json and has the username and password for the user ID to access the org's JIRA board
-  Note: If you do not provide valid values in SECRET_SLACK_WEBHOOKS and SECRET_JIRA_AUTH the service will soft fail and print error messages about failure to initiate slack and jira methods in the docker container logs
+  Note: If you do not provide valid values in SECRET_SLACK_WEBHOOKS and SECRET_JIRA_AUTH the service will soft fail and print error messages about failure to initiate slack and jira methods in the docker container logs 
+
+Note: If you do not move the JSON secrets files location then you do not need to update the above three environment variables values already present in the Dockerfiles or docker-compose.yaml
 
 ### Running/Serving the Docker Image
 This command will use docker-compose.yaml to bring up all the containers. Please update configuration/environment/localdev.env with values relevant to your organisation before running the below command
