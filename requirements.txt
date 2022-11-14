@@ -8,3 +8,4 @@ PyGithub==1.53
 redis==3.5.3
 requests==2.25.0
 unidiff==0.6.0
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
